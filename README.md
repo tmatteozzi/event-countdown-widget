@@ -1,8 +1,13 @@
-# Event Countdown Widget
+# ⏳ Event Countdown Widget
 
-A native macOS app that shows live countdowns to your Mac Calendar events in
-desktop / Notification Center widgets. Built entirely with Apple frameworks — no
-external dependencies.
+A native **macOS app** that shows live countdowns to your Mac Calendar events in
+desktop / Notification Center **widgets** — built entirely with Apple frameworks,
+no external dependencies.
+
+![platform](https://img.shields.io/badge/platform-macOS%2014%2B-black)
+![swift](https://img.shields.io/badge/Swift-SwiftUI-orange)
+![frameworks](https://img.shields.io/badge/deps-Apple%20frameworks%20only-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
 
 Each widget is configured individually (right-click → **Edit widget**): pick a
 calendar to filter by, then choose the specific events you want to track. A
@@ -10,35 +15,54 @@ single widget can mix events from different calendars and accounts. The
 countdown is shown compactly as days remaining (e.g. `3d`, and `5h` / `42m` when
 an event is under a day away).
 
-## Widget sizes
+---
+
+## ✨ Features
+
+- 🗓️ Live countdowns to your **Mac Calendar events**, straight from EventKit.
+- 🧩 **Per-widget configuration** — filter by calendar, then pick the exact events to track.
+- 🔀 A single widget can **mix events from different calendars and accounts**.
+- ⏱️ Compact countdown that tightens as the event nears: `3d` → `5h` → `42m`.
+- 🎨 Rows show each **calendar's color**, and the widget adapts to **light & dark mode**.
+- 🪶 **Zero third-party libraries** — Swift · SwiftUI · WidgetKit · App Intents · EventKit.
+
+---
+
+## 📐 Widget sizes
 
 | Size   | Shows                                                        |
 |--------|-------------------------------------------------------------|
 | Small  | One event: big countdown, title, and date.                  |
-| Medium | Up to 3 events as rows, evenly distributed.                |
+| Medium | Up to 3 events as rows, evenly distributed.                 |
 | Large  | Up to 7 events as rows, evenly distributed.                 |
 
 Each row shows the calendar's color, the event title and date, and the
-countdown. Colors follow the source calendar, and the widget adapts to light and
-dark mode.
+countdown.
 
-## Stack
+---
+
+## 🧱 Stack
 
 Swift · SwiftUI · WidgetKit · App Intents · EventKit. All system frameworks,
 zero third-party libraries.
 
-## Requirements
+---
 
-- macOS 14 or later (EventKit full access + App Intents for widgets).
-- Xcode 15 or later.
-- An Apple Developer account (a free one works for personal use) to sign the app
-  and widget extension.
+## ✅ Requirements
 
-## Build & run (developers)
+| Requirement | Notes |
+|---|---|
+| **macOS 14 or later** | EventKit full access + App Intents for widgets. |
+| **Xcode 15 or later** | To build the app and widget extension. |
+| **Apple Developer account** | A free one works for personal use — needed to sign the app and widget extension. |
+
+---
+
+## 🚀 Build & run
 
 1. Clone the repo:
    ```sh
-   git clone <this-repo-url>
+   git clone https://github.com/tmatteozzi/event-countdown-widget.git
    cd event-countdown-widget
    ```
 2. Open `EventCountdown.xcodeproj` in Xcode.
@@ -50,32 +74,39 @@ zero third-party libraries.
    add the widget from the desktop / Notification Center and configure it via
    right-click → **Edit widget**.
 
-## Configuration (change these to your own)
+---
 
-The bundle identifiers ship as placeholders so the project builds out of the
-box. A contributor signing with their own Team should change them to unique
-values:
+## ⚙️ Configuration (change these to your own)
 
-| What              | Value                                | Where                                 |
-|-------------------|--------------------------------------|---------------------------------------|
-| App bundle ID     | `com.example.eventcountdown`         | EventCountdown target build settings  |
-| Widget bundle ID  | `com.example.eventcountdown.widget`  | CountdownWidget target build settings |
+The project ships with these bundle identifiers. A contributor signing with
+their own Team should change them to unique values:
 
-For example, replace `example` with your own identifier:
+| What              | Value                                   | Where                                 |
+|-------------------|-----------------------------------------|---------------------------------------|
+| App bundle ID     | `com.tmatteozzi.eventcountdown`         | EventCountdown target build settings  |
+| Widget bundle ID  | `com.tmatteozzi.eventcountdown.widget`  | CountdownWidget target build settings |
+
+For example, replace `tmatteozzi` with your own identifier:
 
 ```
-com.example.eventcountdown         →  com.tmatteozzi.eventcountdown
-com.example.eventcountdown.widget  →  com.tmatteozzi.eventcountdown.widget
+com.tmatteozzi.eventcountdown         →  com.yourname.eventcountdown
+com.tmatteozzi.eventcountdown.widget  →  com.yourname.eventcountdown.widget
 ```
 
-## Behavior notes
+---
 
-- Closing the main window (red button) hides it and keeps the app running in the
-  background, Reminders-style; clicking the Dock icon brings the same window back.
+## 📝 Behavior notes
+
+- Closing the main window (red button) quits the app. Widgets you've added keep
+  working and updating on their own — the app only needs to run to browse events
+  and configure widgets.
 - Widget timelines refresh at a granularity that adapts to how soon the nearest
-  shown event is (per-minute when it's under an hour away, hourly when far off).
+  shown event is: **per-minute** under an hour away, **every 15 min** under a day,
+  and **hourly** when farther off.
 
-## Uninstall
+---
+
+## 🗑️ Uninstall
 
 There is no in-app uninstall. Remove the app manually:
 
@@ -87,15 +118,17 @@ There is no in-app uninstall. Remove the app manually:
    rm -rf ~/Library/Containers/com.tmatteozzi.eventcountdown
    ```
 
-A couple of things are deliberately left untouched:
+> [!NOTE]
+> A couple of things are deliberately left untouched:
+> - **Your Calendar events are not affected.** They live in EventKit / your
+>   Calendar, not in this app.
+> - **Widget configuration is managed by the system (WidgetKit), not the app** —
+>   the app can't remove it. To clear it, remove the widget from the widget
+>   editing view in Notification Center.
 
-- **Your Calendar events are not affected.** They live in EventKit / your
-  Calendar, not in this app.
-- **Widget configuration is managed by the system (WidgetKit), not the app** —
-  the app can't remove it. To clear it, remove the widget from the widget
-  editing view in Notification Center.
+---
 
-## Project layout
+## 🗂️ Project layout
 
 ```
 EventCountdown/                app (host) target
@@ -114,8 +147,8 @@ Shared/
 EventCountdown.xcodeproj       the Xcode project
 ```
 
-## License
+---
+
+## 📄 License
 
 [MIT](LICENSE).
-</content>
-</invoke>
