@@ -72,8 +72,17 @@ struct CountdownProvider: AppIntentTimelineProvider {
         // A bounded batch forward; `.atEnd` makes WidgetKit re-request (and
         // recompute the interval) once it runs out.
         let entryCount = 12
-        let entries = (0..<entryCount).map { step in
+        var entries = (0..<entryCount).map { step in
             CountdownEntry(date: now.addingTimeInterval(Double(step) * interval), events: events)
+        }
+
+        // Days are calendar days, so the count must flip exactly at midnight
+        // rather than at the next regular step.
+        let calendar = Calendar.current
+        if let midnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)),
+           let last = entries.last?.date, midnight < last {
+            entries.append(CountdownEntry(date: midnight, events: events))
+            entries.sort { $0.date < $1.date }
         }
         return Timeline(entries: entries, policy: .atEnd)
     }

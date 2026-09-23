@@ -20,14 +20,20 @@ struct Countdown: Equatable {
 enum CountdownCalculator {
     /// Pure function: time remaining from `now` to `target`.
     /// Fully testable — no `Date()` side effects unless the caller omits `now`.
-    static func remaining(to target: Date, from now: Date = Date()) -> Countdown {
+    /// `days` counts calendar days (midnights crossed), so it ticks over at
+    /// midnight rather than at the event's time of day; hours/minutes are the
+    /// real remainder (only shown when the event is today).
+    static func remaining(to target: Date, from now: Date = Date(),
+                          calendar: Calendar = .current) -> Countdown {
         let interval = target.timeIntervalSince(now)
         guard interval > 0 else {
             return Countdown(days: 0, hours: 0, minutes: 0, isPast: true)
         }
         let totalMinutes = Int(interval / 60)
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now),
+                                           to: calendar.startOfDay(for: target)).day ?? 0
         return Countdown(
-            days: totalMinutes / (60 * 24),
+            days: days,
             hours: (totalMinutes % (60 * 24)) / 60,
             minutes: totalMinutes % 60,
             isPast: false
@@ -86,26 +92,36 @@ extension CountdownCalculator {
     /// Runnable self-check for the date math. Called on app launch in DEBUG.
     /// Uses `assert`, so a wrong result traps the debug build immediately.
     static func demo() {
-        let base = Date(timeIntervalSince1970: 1_000_000)
+        // Fixed GMT calendar so the calendar-day math is deterministic.
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "GMT")!
+        // 2026-09-23 is a Wednesday.
+        func at(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
+            cal.date(from: DateComponents(year: 2026, month: 9, day: day, hour: hour, minute: minute))!
+        }
 
-        // 3d 4h 5m ahead
-        let a = remaining(to: base.addingTimeInterval(3 * 86400 + 4 * 3600 + 5 * 60), from: base)
-        assert(a.days == 3 && a.hours == 4 && a.minutes == 5, "d/h/m math: \(a)")
-        assert(a.shortText == "3d", "days-only with days: \(a.shortText)")
+        // Wed 15:00 → Fri 09:00 is 2 calendar days, not 1 full 24h block
+        let a = remaining(to: at(25, 9), from: at(23, 15), calendar: cal)
+        assert(a.days == 2 && a.shortText == "2d", "calendar days: \(a)")
         assert(!a.isPast)
 
-        // under a day falls back to hours: 5h 30m -> "5h"
-        let b = remaining(to: base.addingTimeInterval(5 * 3600 + 30 * 60), from: base)
-        assert(b.shortText == "5h", "under a day shows hours: \(b.shortText)")
+        // 23:30 → 00:30 tomorrow crosses midnight: "1d", not "1h"
+        let b = remaining(to: at(24, 0, 30), from: at(23, 23, 30), calendar: cal)
+        assert(b.shortText == "1d", "crosses midnight: \(b.shortText)")
+
+        // same day falls back to hours: 5h 30m -> "5h"
+        let c = remaining(to: at(23, 14, 30), from: at(23, 9), calendar: cal)
+        assert(c.days == 0 && c.hours == 5 && c.minutes == 30, "h/m math: \(c)")
+        assert(c.shortText == "5h", "today shows hours: \(c.shortText)")
 
         // minutes only: 42m
-        let c = remaining(to: base.addingTimeInterval(42 * 60), from: base)
-        assert(c.days == 0 && c.hours == 0 && c.minutes == 42, "minutes math: \(c)")
-        assert(c.shortText == "42m", "shortText minutes: \(c.shortText)")
+        let d = remaining(to: at(23, 15, 42), from: at(23, 15), calendar: cal)
+        assert(d.days == 0 && d.hours == 0 && d.minutes == 42, "minutes math: \(d)")
+        assert(d.shortText == "42m", "shortText minutes: \(d.shortText)")
 
         // elapsed target
-        let d = remaining(to: base.addingTimeInterval(-60), from: base)
-        assert(d.isPast && d.shortText == "now", "past: \(d)")
+        let e = remaining(to: at(23, 14, 59), from: at(23, 15), calendar: cal)
+        assert(e.isPast && e.shortText == "now", "past: \(e)")
 
         print("[CountdownCalculator.demo] all checks passed")
     }
